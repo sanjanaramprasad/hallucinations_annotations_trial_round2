@@ -14,11 +14,10 @@ from flask import Flask, render_template, redirect, url_for, request
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import math
-import spacy
 import os
 import nltk
 nltk.download('punkt')
-nlp = spacy.load('en_core_web_sm')
+
 
 application = Flask(__name__)
 application.secret_key = 'super_secret_key' 
