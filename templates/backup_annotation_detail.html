@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annotation Detail</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 1300px;
+            margin: auto;
+        }
+        .column {
+            padding: 15px;
+        }
+        .column h2 {
+            font-size: 1.75rem;
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f1f3f4;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            margin: 0;
+            height: 500px; /*Adjust height to fit the container */
+            overflow-y: auto; /* Add vertical scroll */
+            box-sizing: border-box;
+        }
+        .default-highlight {
+            background-color: #d3d3d3;
+            border-radius: 3px;
+            padding: 2px 4px;
+            margin: 0 2px;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .highlight-mistake {
+            background-color: #ffeb3b;
+            border-radius: 3px;
+            padding: 2px 4px;
+            margin: 0 2px;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .highlight-somewhat_mistake {
+            background-color: #ff9800;
+            border-radius: 3px;
+            padding: 2px 4px;
+            margin: 0 2px;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .highlight-inference {
+            background-color: #8bc34a;
+            border-radius: 3px;
+            padding: 2px 4px;
+            margin: 0 2px;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .highlight-category3 {
+            background-color: #03a9f4;
+            border-radius: 3px;
+            padding: 2px 4px;
+            margin: 0 2px;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-top: 20px;
+        }
+        .rating-form {
+            display: none;
+            margin-top: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 2rem;
+            margin: 0;
+            color: #343a40;
+        }
+        .header a {
+            text-decoration: none;
+            font-size: 1rem;
+            color: #007bff;
+        }
+        .header a:hover {
+            text-decoration: underline;
+        }
+
+        .rating-box {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            left: 100%; /* Position to the right of the span */
+            top: 0; /* Align with the top of the span */
+            display: none; /* Initially hide the rating box */
+        }
+
+        .highlight-mistake:hover .rating-box,
+        .highlight-somewhat_mistake:hover .rating-box,
+        .highlight-inference:hover .rating-box,
+        .highlight-category3:hover .rating-box {
+            display: block; /* Show rating box on hover */
+        }
+
+        .delete-button {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 12px;
+            background-color: #fff;
+            color: #dc3545;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Annotation Tool</h1>
+            <a href="/">Back to Dashboard</a>
+        </div>
+        <div class="row">
+            <div class="col-md-6 column">
+                <h2>Source</h2>
+                <pre>{{ source }}</pre>
+            </div>
+            <div class="col-md-6 column">
+                <h2>Summary</h2>
+                <pre id="summary" contenteditable="true">
+                    <!-- Display summary text -->
+                    {{ summary }}
+                </pre>
+                <!-- <div class="form-group">
+                    <label for="category">Select Category:</label>
+                    <select id="category" class="form-control">
+                        <option value="">Select Category</option>
+                        <option value="mistake" style="background-color: #ffeb3b; color: blue;">Mistake</option>
+                        <option value="inference" style="background-color: #8bc34a;">Inference</option>
+                    </select>
+                </div> -->
+                <input type="hidden" id="docid" value="{{ docid }}">
+                <input type="hidden" id="source" value="{{ source }}">
+                <input type="hidden" id="og_summary" value="{{ summary }}">
+                <input type="hidden" id="model" value="{{ model }}">
+                <input type="hidden" id="origin" value="{{ origin }}">
+                <input type="hidden" id="benchmark_dataset_name" value="{{ benchmark_dataset_name }}">
+
+                <div id="evidenceForm" class="evidence-form" style="display: none;">
+                    <label for="evidence" id="evidenceLabel">Is there information in the source that contradicts the unsupported/partially supported span?</label>
+                    <select id="evidence" class="form-control">
+                        <option value="">Select Answer</option>
+                        <option value="yes">yes (explicit/direct contradiction)</option>
+                        <option value="maybe">somewhat (implicit/indirect contradiction)</option>
+                        <option value="no">no</option>
+                    </select>
+                </div>
+
+                <!-- <div id="ratingForm" class="rating-form" style="display: none;">
+                    <label for="rating" id="ratingLabel">Select Rating</label>
+                    <select id="rating" class="form-control">
+                        <option value="">Select Rating</option>
+                        <option value="severe">severe</option>
+                        <option value="somewhat_severe">somewhat severe</option>
+                        <option value="not_severe">not severe</option>
+                    </select>
+                    <button id="saveRatingMistake" class="btn btn-primary mt-2">Save Rating</button>
+                </div> -->
+                <div id="additionalRatings" style="display: none;">
+                        <label for="additionalRating1">Based on contextual information in the source, would you arrive at a similar interpretation? </label>
+                        <select id="additionalRating1" class="form-control">
+                            <option value="">Select Rating</option>
+                            <option value="obvious">Yes (this is the most reasonable interpretation)</option>
+                            <option value="likely">Maybe (other interpretations could also be valid)</option>
+                            <option value="not_likely">No (I believe other interpretations are more reasonable.)</option>
+                        </select>
+                        <label for="additionalRating2">How common is the knowledge used in making or correcting this inference?</label>
+                        <select id="additionalRating2" class="form-control">
+                            <option value="">Select Rating</option>
+                            <option value="common">Common (entirely based on common sense or general understanding) </option>
+                            <option value="somewhat_common">Somewhat common (mostly common sense with some specific knowledge) </option>
+                            <option value="no">Not common (requires specialized knowledge) </option>
+                        </select>
+                        <label for="additionalRating3"> How significant could the impact of the inconsistent span be if the interpretation were accepted as true?</label>
+                        <select id="additionalRating3" class="form-control">
+                            <option value="">Select Rating</option>
+                            <option value="high_consequence"> Significant impact (could be misleading or harmful) </option>
+                            <option value="moderate_consequence">Moderate impact (some potential for misunderstanding )</option>
+                            <option value="low_consequence">Low impact (unlikely to be misleading or cause harm ) </option>
+                        </select>
+                        <button id="saveRatingInference" class="btn btn-primary mt-2">Save Rating</button>
+                </div>
+                
+                
+                <button id="finalSubmit" class="btn btn-success mt-3">Submit</button>
+                <button id="undoAnnotation" class="btn btn-danger mt-3">Undo All Annotation</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        let currentSpan = null;
+        let annotations = JSON.parse('{{ annotations | tojson | safe }}');
+        let spanList = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+        const summaryElement = document.getElementById('summary');
+        let currentSpan = null;
+        let spanList = [];
+        let annotations = JSON.parse('{{ annotations | tojson | safe }}');
+
+        function updateSummaryText() {
+            let summaryText = summaryElement.textContent.trim();
+            annotations.forEach(annotation => {
+                let startIndex = summaryText.indexOf(annotation.nonfactual_span);
+                if (startIndex !== -1) {
+                    let endIndex = startIndex + annotation.nonfactual_span.length;
+                    summaryText = summaryText.substring(0, startIndex) +
+                        `<span class="${annotation.error_type}" data-additional-rating1="${annotation.inference_likelihood}" data-additional-rating2="${annotation.inference_knowledge}" data-additional-rating3="${annotation.inference_severity}">${annotation.nonfactual_span}</span>` +
+                        summaryText.substring(endIndex);
+                }
+            });
+            summaryElement.innerHTML = summaryText;
+            attachSpanEventListeners();
+        }
+
+        function attachSpanEventListeners() {
+            const highlightedSpans = document.querySelectorAll('.highlight-mistake, .highlight-somewhat_mistake, .highlight-inference');
+            highlightedSpans.forEach(span => {
+                let ratingBox = document.createElement('div');
+                ratingBox.className = 'rating-box';
+                span.appendChild(ratingBox);
+
+                span.addEventListener('mouseenter', function() {
+                    showRatings(span);
+                });
+
+                span.addEventListener('mouseleave', function() {
+                    let ratingBox = span.querySelector('.rating-box');
+                    if (ratingBox) {
+                        ratingBox.textContent = '';
+                        ratingBox.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function showRatings(span) {
+            let ratingBox = span.querySelector('.rating-box');
+            if (ratingBox) {
+                // let rating = span.getAttribute('data-rating');
+                let additionalRating1 = span.getAttribute('data-additional-rating1');
+                let additionalRating2 = span.getAttribute('data-additional-rating2');
+                let additionalRating3 = span.getAttribute('data-additional-rating3');
+                let ratingText = span.className;
+
+                
+                if (additionalRating1 && additionalRating1 !== 'null') {
+                    ratingText += `\nLikelihood: ${additionalRating1}`;
+                }
+                if (additionalRating2 && additionalRating2 !== 'null') {
+                    ratingText += `\nCommon Knowledge: ${additionalRating2}`;
+                }
+                if (additionalRating3 && additionalRating3 !== 'null') {
+                    ratingText += `\nConsequence: ${additionalRating3}`;
+                }
+
+                ratingBox.textContent = ratingText;
+                ratingBox.style.display = 'block';
+            }
+        }
+
+        // summaryElement.addEventListener('mouseup', function(event) {
+        //     let selectedText = window.getSelection().toString().trim();
+        //     if (selectedText.length > 0) {
+        //         let span = document.createElement('span');
+        //         span.textContent = selectedText;
+
+        //         let evidenceForm = document.getElementById('evidenceForm');
+        //         // let ratingForm = document.getElementById('ratingForm');
+        //         // let ratingLabel = document.getElementById('ratingLabel');
+        //         let additionalRatings = document.getElementById('additionalRatings');
+
+        //         evidenceForm.style.display = 'block';
+        //         // ratingForm.style.display = 'none';
+        //         additionalRatings.style.display = 'none';
+
+        //         let range = window.getSelection().getRangeAt(0);
+        //         range.deleteContents();
+        //         range.insertNode(span);
+
+        //         currentSpan = span;
+        //     }
+        // });
+
+        summaryElement.addEventListener('mouseup', function(event) {
+            let selectedText = window.getSelection().toString().trim();
+            if (selectedText.length > 0) {
+                let span = document.createElement('span');
+                span.textContent = selectedText;
+
+                let evidenceForm = document.getElementById('evidenceForm');
+                let additionalRatings = document.getElementById('additionalRatings');
+
+                evidenceForm.style.display = 'block';
+                additionalRatings.style.display = 'none';
+
+                let range = window.getSelection().getRangeAt(0);
+                let fullText = summaryElement.textContent;
+
+                // Calculate the absolute start and end offsets in the original full text
+                let preSelectionRange = range.cloneRange();
+                preSelectionRange.selectNodeContents(summaryElement);
+                preSelectionRange.setEnd(range.startContainer, range.startOffset);
+                let startOffset = preSelectionRange.toString().length;
+
+                let postSelectionRange = range.cloneRange();
+                postSelectionRange.selectNodeContents(summaryElement);
+                postSelectionRange.setEnd(range.endContainer, range.endOffset);
+                let endOffset = startOffset + selectedText.length;
+
+                span.setAttribute('data-start', startOffset);
+                span.setAttribute('data-end', endOffset);
+
+                // Get the 5 words before the selected text
+                let prefix = fullText.substring(0, startOffset).split(/\s+/).slice(-5).join(" ");
+                // Get the 5 words after the selected text
+                let suffix = fullText.substring(endOffset).split(/\s+/).slice(0, 5).join(" ");
+
+                // Add data attributes to store the prefix and suffix
+                span.setAttribute('data-prefix', prefix);
+                span.setAttribute('data-suffix', suffix);
+
+                range.deleteContents();
+                range.insertNode(span);
+
+                currentSpan = span;
+                alert(startOffset);
+            }
+        });
+
+
+        document.getElementById('evidence').addEventListener('change', function() {
+            let evidenceValue = this.value;
+            let category = evidenceValue === 'yes' ? 'mistake' : evidenceValue === 'maybe'? 'somewhat_mistake': 'inference';
+            // let category = 'inference';
+
+            if (currentSpan) {
+                currentSpan.className = `highlight-${category}`;
+                // document.getElementById('ratingForm').style.display = 'none';
+                document.getElementById('additionalRatings').style.display = 'block';
+                // if (category === 'mistake') {
+                    
+                //     document.getElementById('ratingForm').style.display = 'block';
+                //     document.getElementById('ratingLabel').textContent = 'How severe is the mistake?';
+                //     document.getElementById('additionalRatings').style.display = 'none';
+                // } else if (category === 'inference') {
+                //     document.getElementById('ratingForm').style.display = 'none';
+                //     document.getElementById('additionalRatings').style.display = 'block';
+                // }
+            }
+        });
+
+        // document.getElementById('saveRatingMistake').addEventListener('click', function() {
+        //     let rating = document.getElementById('rating').value;
+
+        //     if (currentSpan && currentSpan.classList.contains('highlight-mistake')) {
+        //         if (!rating) {
+        //             alert('Please select a rating.');
+        //             return;
+        //         }
+        //         currentSpan.setAttribute('data-rating', rating);
+        //         spanList.push(currentSpan);
+        //         currentSpan = null;
+        //         document.getElementById('evidenceForm').style.display = 'none';
+        //         document.getElementById('evidence').value = '';
+        //         document.getElementById('ratingForm').style.display = 'none';
+        //         document.getElementById('rating').value = '';
+                
+        //     }
+        // });
+
+        document.getElementById('saveRatingInference').addEventListener('click', function() {
+            let additionalRating1 = document.getElementById('additionalRating1').value;
+            let additionalRating2 = document.getElementById('additionalRating2').value;
+            let additionalRating3 = document.getElementById('additionalRating3').value;
+
+            if (currentSpan) {
+                if (!additionalRating1 || !additionalRating2 || !additionalRating3) {
+                    alert('Please select all additional ratings.');
+                    return;
+                }
+
+                currentSpan.setAttribute('data-additional-rating1', additionalRating1);
+                currentSpan.setAttribute('data-additional-rating2', additionalRating2);
+                currentSpan.setAttribute('data-additional-rating3', additionalRating3);
+                spanList.push(currentSpan);
+                currentSpan = null;
+                document.getElementById('evidenceForm').style.display = 'none';
+                document.getElementById('evidence').value = '';
+                document.getElementById('additionalRatings').style.display = 'none';
+                document.getElementById('additionalRating1').value = '';
+                document.getElementById('additionalRating2').value = '';
+                document.getElementById('additionalRating3').value = '';
+            }
+        });
+
+        document.getElementById('undoAnnotation').addEventListener('click', function() {
+            annotations = [];
+            spanList = [];
+            let spans = document.querySelectorAll('.highlight-mistake, .highlight-somewhat_mistake, .highlight-inference');
+            spans.forEach(span => {
+                let parent = span.parentNode;
+                parent.replaceChild(document.createTextNode(span.textContent), span);
+            });
+            currentSpan = null;
+            document.getElementById('evidenceForm').style.display = 'none';
+            document.getElementById('evidence').value = '';
+            document.getElementById('additionalRatings').style.display = 'none';
+            document.getElementById('additionalRating1').value = '';
+            document.getElementById('additionalRating2').value = '';
+            document.getElementById('additionalRating3').value = '';
+            updateSummaryText();
+        });
+
+        document.getElementById('finalSubmit').addEventListener('click', function() {
+            spanList.forEach(span => {
+                let annotation = {
+                    nonfactual_span: span.textContent,
+                    error_type: span.className,
+                    mistake_severity: span.getAttribute('data-rating'),
+                    start_position: span.getAttribute('data-start'),
+                    end_position: span.getAttribute('data-end'),
+                    inference_likelihood: span.getAttribute('data-additional-rating1'),
+                    inference_knowledge: span.getAttribute('data-additional-rating2'),
+                    inference_severity: span.getAttribute('data-additional-rating3')
+                };
+                annotations.push(annotation);
+            });
+
+            let data = {
+                docid: document.getElementById('docid').value,
+                source: document.getElementById('source').value,
+                summary: document.getElementById('summary').textContent.trim(),
+                model: document.getElementById('model').value,
+                origin: document.getElementById('origin').value,
+                benchmark_dataset_name: document.getElementById('benchmark_dataset_name').value,
+                annotations: annotations
+            };
+
+            fetch('/save_annotations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Annotations submitted successfully!');
+                    } else {
+                        alert('Failed to submit annotations.');
+                    }
+                }).catch(error => {
+                    console.error('Error submitting annotations:', error);
+                    alert('An error occurred while submitting annotations.');
+                });
+        });
+
+        updateSummaryText();
+    });
+    </script>
+</body>
+</html>

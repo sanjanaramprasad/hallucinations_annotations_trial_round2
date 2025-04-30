@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annotate</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 50px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .check-icon {
+            color: green;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Annotate Page</h1>
+        <form action="/annotate_action" method="POST">
+            <div class="form-group">
+                <label for="id_select">Select an ID to annotate:</label>
+                <select class="form-control" name="id" id="id_select">
+                    {% for id in ids %}
+                        <option value="{{ id }}">
+                            {{ id }}
+                            {% if id in annotated_ids %}
+                                <span class="check-icon">&#10004;</span>
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Annotate</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
