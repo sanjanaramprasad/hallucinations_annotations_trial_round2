@@ -74,7 +74,8 @@ def get_users():
             "sanjana": User(1, "sanjana", "sanjana"),
             "elisa": User(2, "elisa", "elisa"),
             "pranav": User(3, "pranav", "pranav"),
-            "rachel_usher": User(4, "rachel_usher", "rachel_usher")
+            "rachel_usher": User(4, "rachel_usher", "rachel_usher"),
+            "kathryn_kazanas": User(5, "kathryn_kazanas", "X7xHD")
         }
         # with open('user_ids.json', 'r') as fp:
         #     user_strings = json.load(fp)
