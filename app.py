@@ -16,6 +16,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import math
 import os
 import nltk
+nltk.download('punkt_tab')
 nltk.download('punkt')
 
 
