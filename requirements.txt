@@ -80,7 +80,6 @@ numpy==1.26.4
 nltk==3.8.1
 overrides==7.7.0
 packaging==24.1
-pandas==2.2.2
 pandocfilters==1.5.1
 parso==0.8.4
 pexpect==4.9.0
